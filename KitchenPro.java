@@ -1,21 +1,31 @@
-import java.util.*;
-import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
-
+import java.awt.*;
+import java.util.*;
 import javax.swing.*;
+import java.awt.event.*;
+import java.util.regex.*;
 
 public class KitchenPro extends JPanel implements ActionListener {
 
-    private HashMap<String, JLabel> labels;
-    private HashMap<String, Double> portions;
+    private class Tuple {
+        public String name;
+        public int number;
+        public JLabel label;
 
+        public Tuple(String name, int number, JLabel label) {
+            this.name = name;
+            this.number = number;
+            this.label = label;
+        }
+    }
+
+    private ArrayList<Tuple> list;
     private JSpinner spinner;
 
     public KitchenPro() {
         super(new BorderLayout());
 
-        loadPortions("portions.txt");
+        loadQuantities("quantities.txt");
 
         JPanel topPanel = new JPanel(new GridBagLayout());
         JLabel label = new JLabel("Number of people:");
@@ -34,36 +44,31 @@ public class KitchenPro extends JPanel implements ActionListener {
         add(topPanel, BorderLayout.NORTH);
 
         JPanel centerPanel = new JPanel(new GridBagLayout());
-        labels = new HashMap<>();
-        int i = 0;
         c.gridwidth = 1; c.gridheight = 1;
-        for (String item : portions.keySet()) {
-            c.gridy = i++;
+        for (int i = 0; i < list.size(); i++) {
+            c.gridy = i;
 
             c.gridx = 0; c.weightx = 1.0;
-            centerPanel.add(new JLabel(item + ": "), c);
+            centerPanel.add(new JLabel(list.get(i).name + ": "), c);
 
-            JLabel lbl = new JLabel("∞");
-            labels.put(item, lbl);
-            lbl.setHorizontalAlignment(SwingConstants.RIGHT);
+            list.get(i).label.setHorizontalAlignment(SwingConstants.RIGHT);
             c.gridx = 1; c.weightx = 0.0;
-            centerPanel.add(lbl, c);
+            centerPanel.add(list.get(i).label, c);
         }
         JScrollPane scrollPane = new JScrollPane(centerPanel);
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    private void loadPortions(String filename) {
-        portions = new HashMap<>();
+    private void loadQuantities(String filename) {
+        list = new ArrayList<>();
 
         try {
             Scanner file = new Scanner(new File(filename));
             while (file.hasNextLine()) {
-                String[] line = file.nextLine().split(": ");
-                String item = line[0];
-                String fraction[] = line[1].split("/");
-
-                portions.put(item, Double.parseDouble(fraction[0])/Double.parseDouble(fraction[1]));
+                Pattern pattern = Pattern.compile("(.*): (.*)");
+                Matcher matcher = pattern.matcher(file.nextLine());
+                if (!matcher.matches()) continue;
+                list.add(new Tuple(matcher.group(1), Integer.parseInt(matcher.group(2)), new JLabel()));
             }
             file.close();
         } catch (FileNotFoundException e) {
@@ -73,8 +78,8 @@ public class KitchenPro extends JPanel implements ActionListener {
 
     public void actionPerformed(ActionEvent e) {
         int people = (int)spinner.getValue();
-        for (String item : portions.keySet()) {
-            labels.get(item).setText(Integer.toString((int)Math.ceil(portions.get(item)*people)));
+        for (Tuple t : list) {
+            t.label.setText(Integer.toString((int)Math.ceil(t.number*people)));
         }
     }
 

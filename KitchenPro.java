@@ -39,7 +39,7 @@ public class KitchenPro extends JPanel implements ActionListener {
         topPanel.add(label, c);
         c.gridx = 1; c.gridy = 0; c.gridwidth = 1; c.weightx = 1.0;
         topPanel.add(spinner, c);
-        c.gridx = 0; c.gridy = 1; c.gridwidth = 2; c.weightx = 0.5;
+        c.gridx = 0; c.gridy = 1; c.gridwidth = 2; c.weightx = 1.0;
         topPanel.add(btn, c);
         add(topPanel, BorderLayout.NORTH);
 

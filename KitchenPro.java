@@ -2,17 +2,19 @@ import java.io.*;
 import java.awt.*;
 import java.util.*;
 import javax.swing.*;
-import java.awt.event.*;
 import java.util.regex.*;
+import javax.swing.event.*;
 
-public class KitchenPro extends JPanel implements ActionListener {
+public class KitchenPro extends JPanel implements ChangeListener {
 
     private class Tuple {
+        public JSpinner spinner;
         public String name;
         public int number;
         public JLabel label;
 
-        public Tuple(String name, int number, JLabel label) {
+        public Tuple(JSpinner spinner, String name, int number, JLabel label) {
+            this.spinner = spinner;
             this.name = name;
             this.number = number;
             this.label = label;
@@ -20,48 +22,43 @@ public class KitchenPro extends JPanel implements ActionListener {
     }
 
     private ArrayList<Tuple> list;
-    private JSpinner spinner;
 
     public KitchenPro() {
         super(new BorderLayout());
 
         loadQuantities("quantities.txt");
 
-        JPanel topPanel = new JPanel(new GridBagLayout());
-        JLabel label = new JLabel("Number of people:");
-        spinner = new JSpinner(new SpinnerNumberModel(100, 0, 10000, 10));
-        label.setLabelFor(spinner);
-        JButton btn = new JButton("Update");
-        btn.addActionListener(this);
+        add(new JButton("Print"), BorderLayout.NORTH);
+
         GridBagConstraints c = new GridBagConstraints();
         c.gridheight = 1; c.fill = GridBagConstraints.HORIZONTAL;
-        c.gridx = 0; c.gridy = 0; c.gridwidth = 1; c.weightx = 0.0;
-        topPanel.add(label, c);
-        c.gridx = 1; c.gridy = 0; c.gridwidth = 1; c.weightx = 1.0;
-        topPanel.add(spinner, c);
-        c.gridx = 0; c.gridy = 1; c.gridwidth = 2; c.weightx = 1.0;
-        topPanel.add(btn, c);
-        add(topPanel, BorderLayout.NORTH);
 
         JPanel centerPanel = new JPanel(new GridBagLayout());
         c.gridwidth = 1; c.gridheight = 1;
         for (int i = 0; i < list.size(); i++) {
+            Tuple tuple = list.get(i);
             c.gridy = i;
 
-            c.gridx = 0; c.weightx = 1.0;
-            if (list.get(i) != null) {
-                centerPanel.add(new JLabel(list.get(i).name + ": "), c);
+            if (tuple != null) {
+                c.gridx = 0; c.weightx = 0.25; c.gridwidth = 1;
+                tuple.spinner.addChangeListener(this);
+                centerPanel.add(tuple.spinner, c);
 
-                list.get(i).label.setHorizontalAlignment(SwingConstants.RIGHT);
-                c.gridx = 1; c.weightx = 0.0;
-                centerPanel.add(list.get(i).label, c);
+                c.gridx = 1; c.weightx = 0.75;
+                centerPanel.add(new JLabel(tuple.name + ": "), c);
+
+                tuple.label.setHorizontalAlignment(SwingConstants.RIGHT);
+                c.gridx = 2; c.weightx = 0.0;
+                centerPanel.add(tuple.label, c);
             } else {
-                c.gridwidth = 2;
+                c.gridx = 0; c.weightx = 1.0; c.gridwidth = 3;
                 centerPanel.add(new JLabel(" "), c);
             }
         }
         JScrollPane scrollPane = new JScrollPane(centerPanel);
         add(scrollPane, BorderLayout.CENTER);
+
+        stateChanged(null);
     }
 
     private void loadQuantities(String filename) {
@@ -73,7 +70,7 @@ public class KitchenPro extends JPanel implements ActionListener {
                 Pattern pattern = Pattern.compile("(.*): (.*)");
                 Matcher matcher = pattern.matcher(file.nextLine());
                 if (matcher.matches()) {
-                    list.add(new Tuple(matcher.group(1), Integer.parseInt(matcher.group(2)), new JLabel()));
+                    list.add(new Tuple(new JSpinner(), matcher.group(1), Integer.parseInt(matcher.group(2)), new JLabel()));
                 } else {
                     list.add(null);
                 }
@@ -84,11 +81,10 @@ public class KitchenPro extends JPanel implements ActionListener {
         }
     }
 
-    public void actionPerformed(ActionEvent e) {
-        int people = (int)spinner.getValue();
+    public void stateChanged(ChangeEvent e) {
         for (Tuple t : list) {
             if (t == null) continue;
-            t.label.setText(Integer.toString((int)Math.ceil(t.number*people)));
+            t.label.setText(Integer.toString(t.number - (int)t.spinner.getValue()));
         }
     }
 

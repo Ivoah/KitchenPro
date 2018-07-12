@@ -10,7 +10,7 @@ Egg, white citric acid 6/5#: 8
 Ice Cream, Chocolate 1/3gal: 1
 Ice cream, vanilla 1/3gal: 2
 Margarine, solid all veg 30/1#: 2
-Milk, 2% 6/.5gal 40
+Milk, 2% 6/.5gal: 40
 Topping whpd rdy-to-wp 12/32oz: 0
 
 Beef patty grd (raw) 80/20 80/4oz: 6

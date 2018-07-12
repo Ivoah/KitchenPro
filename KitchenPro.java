@@ -49,11 +49,16 @@ public class KitchenPro extends JPanel implements ActionListener {
             c.gridy = i;
 
             c.gridx = 0; c.weightx = 1.0;
-            centerPanel.add(new JLabel(list.get(i).name + ": "), c);
+            if (list.get(i) != null) {
+                centerPanel.add(new JLabel(list.get(i).name + ": "), c);
 
-            list.get(i).label.setHorizontalAlignment(SwingConstants.RIGHT);
-            c.gridx = 1; c.weightx = 0.0;
-            centerPanel.add(list.get(i).label, c);
+                list.get(i).label.setHorizontalAlignment(SwingConstants.RIGHT);
+                c.gridx = 1; c.weightx = 0.0;
+                centerPanel.add(list.get(i).label, c);
+            } else {
+                c.gridwidth = 2;
+                centerPanel.add(new JLabel(" "), c);
+            }
         }
         JScrollPane scrollPane = new JScrollPane(centerPanel);
         add(scrollPane, BorderLayout.CENTER);
@@ -67,8 +72,11 @@ public class KitchenPro extends JPanel implements ActionListener {
             while (file.hasNextLine()) {
                 Pattern pattern = Pattern.compile("(.*): (.*)");
                 Matcher matcher = pattern.matcher(file.nextLine());
-                if (!matcher.matches()) continue;
-                list.add(new Tuple(matcher.group(1), Integer.parseInt(matcher.group(2)), new JLabel()));
+                if (matcher.matches()) {
+                    list.add(new Tuple(matcher.group(1), Integer.parseInt(matcher.group(2)), new JLabel()));
+                } else {
+                    list.add(null);
+                }
             }
             file.close();
         } catch (FileNotFoundException e) {
@@ -79,6 +87,7 @@ public class KitchenPro extends JPanel implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         int people = (int)spinner.getValue();
         for (Tuple t : list) {
+            if (t == null) continue;
             t.label.setText(Integer.toString((int)Math.ceil(t.number*people)));
         }
     }

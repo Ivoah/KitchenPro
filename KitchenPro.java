@@ -4,6 +4,7 @@ import java.util.regex.*;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.print.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -17,7 +18,15 @@ public class KitchenPro extends JPanel {
         super(new BorderLayout());
 
         JButton btn = new JButton("Print");
-        btn.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) {table.print();}});
+        btn.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+                try {
+                    table.print();
+                } catch (PrinterException pe) {
+                    JOptionPane.showMessageDialog(null, "Could not print document", "Printer error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
         add(btn, BorderLayout.NORTH);
 
         table = loadQuantities("quantities.txt");
@@ -38,7 +47,7 @@ public class KitchenPro extends JPanel {
                 if (matcher.matches()) {
                     list.add(new Object[]{0, matcher.group(1), Integer.parseInt(matcher.group(2)), Integer.parseInt(matcher.group(2))});
                 } else {
-                    list.add(new Object[]{null, null, null, null});
+                    list.add(new Object[]{null, null, null});
                 }
             }
             file.close();

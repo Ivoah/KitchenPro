@@ -1,68 +1,43 @@
 import java.io.*;
-import java.awt.*;
 import java.util.*;
-import javax.swing.*;
 import java.util.regex.*;
+
+import java.awt.*;
+import java.awt.event.*;
+
+import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.table.*;
 
-public class KitchenPro extends JPanel implements ChangeListener {
+public class KitchenPro extends JPanel {
 
-    private class Tuple {
-        public JSpinner spinner;
-        public String name;
-        public int number;
-        public JLabel label;
-
-        public Tuple(JSpinner spinner, String name, int number, JLabel label) {
-            this.spinner = spinner;
-            this.name = name;
-            this.number = number;
-            this.label = label;
-        }
-    }
-
-    private ArrayList<Tuple> list;
+    private JTable table;
 
     public KitchenPro() {
         super(new BorderLayout());
 
-        loadQuantities("quantities.txt");
+        JButton btn = new JButton("Print");
+        btn.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+                try {
+                    table.print();
+                } catch (java.awt.print.PrinterException e) {
+                    System.err.format("Cannot print %s%n", e.getMessage());
+                }
 
-        add(new JButton("Print"), BorderLayout.NORTH);
-
-        GridBagConstraints c = new GridBagConstraints();
-        c.gridheight = 1; c.fill = GridBagConstraints.HORIZONTAL;
-
-        JPanel centerPanel = new JPanel(new GridBagLayout());
-        c.gridwidth = 1; c.gridheight = 1;
-        for (int i = 0; i < list.size(); i++) {
-            Tuple tuple = list.get(i);
-            c.gridy = i;
-
-            if (tuple != null) {
-                c.gridx = 0; c.weightx = 0.25; c.gridwidth = 1;
-                tuple.spinner.addChangeListener(this);
-                centerPanel.add(tuple.spinner, c);
-
-                c.gridx = 1; c.weightx = 0.75;
-                centerPanel.add(new JLabel(tuple.name + ": "), c);
-
-                tuple.label.setHorizontalAlignment(SwingConstants.RIGHT);
-                c.gridx = 2; c.weightx = 0.0;
-                centerPanel.add(tuple.label, c);
-            } else {
-                c.gridx = 0; c.weightx = 1.0; c.gridwidth = 3;
-                centerPanel.add(new JLabel(" "), c);
             }
-        }
-        JScrollPane scrollPane = new JScrollPane(centerPanel);
-        add(scrollPane, BorderLayout.CENTER);
+        });
+        add(btn, BorderLayout.NORTH);
 
-        stateChanged(null);
+        table = loadQuantities("quantities.txt");
+        JScrollPane scrollPane = new JScrollPane(table);
+        table.setFillsViewportHeight(true);
+
+        add(scrollPane, BorderLayout.CENTER);
     }
 
-    private void loadQuantities(String filename) {
-        list = new ArrayList<>();
+    private JTable loadQuantities(String filename) {
+        ArrayList<Object[]> list = new ArrayList<>();
 
         try {
             Scanner file = new Scanner(new File(filename));
@@ -70,22 +45,47 @@ public class KitchenPro extends JPanel implements ChangeListener {
                 Pattern pattern = Pattern.compile("(.*): (.*)");
                 Matcher matcher = pattern.matcher(file.nextLine());
                 if (matcher.matches()) {
-                    list.add(new Tuple(new JSpinner(), matcher.group(1), Integer.parseInt(matcher.group(2)), new JLabel()));
+                    list.add(new Object[]{0, matcher.group(1), Integer.parseInt(matcher.group(2)), Integer.parseInt(matcher.group(2))});
                 } else {
-                    list.add(null);
+                    list.add(new Object[]{null, null, null, null});
                 }
             }
             file.close();
         } catch (FileNotFoundException e) {
             System.err.println("Could not load " + filename);
         }
-    }
 
-    public void stateChanged(ChangeEvent e) {
-        for (Tuple t : list) {
-            if (t == null) continue;
-            t.label.setText(Integer.toString(t.number - (int)t.spinner.getValue()));
-        }
+        JTable table = new JTable(new AbstractTableModel() {
+            private String[] columnNames = {"Item", "Current Stock", "To Order"};
+            private Object[][] data = list.toArray(new Object[][]{});
+
+            public int getColumnCount() {return columnNames.length;}
+            public int getRowCount() {return data.length;}
+            public String getColumnName(int col) {return columnNames[col];}
+            public Object getValueAt(int row, int col) {return data[row][col];}
+            public Class getColumnClass(int c) {return getValueAt(0, c).getClass();}
+
+            public boolean isCellEditable(int row, int col) {return col == 0 && getValueAt(row, col) != null;}
+            public void setValueAt(Object value, int row, int col) {
+                data[row][col] = value;
+                fireTableCellUpdated(row, col);
+            }
+        });
+        table.setRowSelectionAllowed(false);
+        table.setColumnSelectionAllowed(false);
+        table.setCellSelectionEnabled(false);
+        table.getModel().addTableModelListener(new TableModelListener(){
+            public void tableChanged(TableModelEvent e) {
+                int row = e.getFirstRow();
+                int col = e.getColumn();
+                TableModel model = (TableModel)e.getSource();
+
+                if (col != 0) return;
+                model.setValueAt((Integer)model.getValueAt(row, 3) - (Integer)model.getValueAt(row, 0), row, 2);
+            }
+        });
+
+        return table;
     }
 
     /**
@@ -95,7 +95,7 @@ public class KitchenPro extends JPanel implements ChangeListener {
      */
     private static void createAndShowGUI() {
         //Create and set up the window.
-        JFrame frame = new JFrame("KitchenPro v0.1");
+        JFrame frame = new JFrame("KitchenPro v0.2");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         //Add content to the window.

@@ -17,16 +17,7 @@ public class KitchenPro extends JPanel {
         super(new BorderLayout());
 
         JButton btn = new JButton("Print");
-        btn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ae) {
-                try {
-                    table.print();
-                } catch (java.awt.print.PrinterException e) {
-                    System.err.format("Cannot print %s%n", e.getMessage());
-                }
-
-            }
-        });
+        btn.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) {table.print();}});
         add(btn, BorderLayout.NORTH);
 
         table = loadQuantities("quantities.txt");
@@ -74,16 +65,27 @@ public class KitchenPro extends JPanel {
         table.setRowSelectionAllowed(false);
         table.setColumnSelectionAllowed(false);
         table.setCellSelectionEnabled(false);
-        table.getModel().addTableModelListener(new TableModelListener(){
+        table.getModel().addTableModelListener(new TableModelListener() {
             public void tableChanged(TableModelEvent e) {
                 int row = e.getFirstRow();
                 int col = e.getColumn();
                 TableModel model = (TableModel)e.getSource();
 
                 if (col != 0) return;
-                model.setValueAt((Integer)model.getValueAt(row, 3) - (Integer)model.getValueAt(row, 0), row, 2);
+                model.setValueAt((int)model.getValueAt(row, 3) - (int)model.getValueAt(row, 0), row, 2);
             }
         });
+        /*table.setDefaultRenderer(Integer.class, new TableCellRenderer() {
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                if (value != null) {
+                    JSpinner spinner = new JSpinner();
+                    spinner.setValue(value);
+                    return spinner;
+                } else {
+                    return null;
+                }
+            }
+        });*/
 
         return table;
     }

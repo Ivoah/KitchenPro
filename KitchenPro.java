@@ -12,6 +12,19 @@ import javax.swing.table.*;
 
 public class KitchenPro extends JPanel {
 
+    private class JSpinnerEditor extends AbstractCellEditor implements TableCellEditor {
+        private JSpinner spinner = new JSpinner();
+
+        public Object getCellEditorValue() {
+            return spinner.getValue();
+        }
+
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            spinner.setValue(value);
+            return spinner;
+        }
+    }
+
     private JTable table;
 
     public KitchenPro() {
@@ -71,9 +84,11 @@ public class KitchenPro extends JPanel {
                 fireTableCellUpdated(row, col);
             }
         });
+
         table.setRowSelectionAllowed(false);
         table.setColumnSelectionAllowed(false);
         table.setCellSelectionEnabled(false);
+
         table.getModel().addTableModelListener(new TableModelListener() {
             public void tableChanged(TableModelEvent e) {
                 int row = e.getFirstRow();
@@ -84,17 +99,9 @@ public class KitchenPro extends JPanel {
                 model.setValueAt((int)model.getValueAt(row, 3) - (int)model.getValueAt(row, 0), row, 2);
             }
         });
-        /*table.setDefaultRenderer(Integer.class, new TableCellRenderer() {
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                if (value != null) {
-                    JSpinner spinner = new JSpinner();
-                    spinner.setValue(value);
-                    return spinner;
-                } else {
-                    return null;
-                }
-            }
-        });*/
+
+        //table.setDefaultRenderer(Integer.class, new DefaultTableCellRenderer());
+        table.setDefaultEditor(Integer.class, new JSpinnerEditor());
 
         return table;
     }

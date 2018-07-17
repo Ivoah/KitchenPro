@@ -60,7 +60,7 @@ public class KitchenPro extends JPanel {
                 if (matcher.matches()) {
                     list.add(new Object[]{0, matcher.group(1), Integer.parseInt(matcher.group(2)), Integer.parseInt(matcher.group(2))});
                 } else {
-                    list.add(new Object[]{null, null, null});
+                    list.add(new Object[]{null, null, null, null});
                 }
             }
             file.close();
@@ -69,7 +69,7 @@ public class KitchenPro extends JPanel {
         }
 
         JTable table = new JTable(new AbstractTableModel() {
-            private String[] columnNames = {"Item", "Current Stock", "To Order"};
+            private String[] columnNames = {"Item", "Current Stock", "To Order", "Total"};
             private Object[][] data = list.toArray(new Object[][]{});
 
             public int getColumnCount() {return columnNames.length;}
@@ -100,7 +100,7 @@ public class KitchenPro extends JPanel {
             }
         });
 
-        //table.setDefaultRenderer(Integer.class, new DefaultTableCellRenderer());
+        table.setDefaultRenderer(Integer.class, new DefaultTableCellRenderer());
         table.setDefaultEditor(Integer.class, new JSpinnerEditor());
 
         return table;

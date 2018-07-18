@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.*;
+import java.util.jar.*;
 import java.util.regex.*;
 
 import java.awt.*;
@@ -53,7 +54,8 @@ public class KitchenPro extends JPanel {
         ArrayList<Object[]> list = new ArrayList<>();
 
         try {
-            Scanner file = new Scanner(new File(filename));
+            JarFile jar = new JarFile("KitchenPro.jar");
+            Scanner file = new Scanner(jar.getInputStream(jar.getEntry("quantities.txt")));
             while (file.hasNextLine()) {
                 Pattern pattern = Pattern.compile("(.*): (.*)");
                 Matcher matcher = pattern.matcher(file.nextLine());
@@ -64,7 +66,8 @@ public class KitchenPro extends JPanel {
                 }
             }
             file.close();
-        } catch (FileNotFoundException e) {
+            jar.close();
+        } catch (IOException e) {
             System.err.println("Could not load " + filename);
         }
 

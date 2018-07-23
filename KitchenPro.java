@@ -1,17 +1,51 @@
 import java.io.*;
-import java.util.*;
-import java.util.jar.*;
-import java.util.regex.*;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.print.*;
+
+import java.util.*;
+import java.util.jar.*;
+import java.util.regex.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.table.*;
 
 public class KitchenPro extends JPanel {
+
+    private class MyTableModel extends AbstractTableModel {
+        private String[] columnNames = {"Inventory", "Current Stock", "To Order", "Total"};
+        private ArrayList<Object[]> data;
+        private ArrayList<Object[]> backupData;
+
+        public MyTableModel(ArrayList<Object[]> list) {
+            data = list;
+        }
+
+        public int getColumnCount() {return columnNames.length;}
+        public int getRowCount() {return data.size();}
+        public String getColumnName(int col) {return columnNames[col];}
+        public Object getValueAt(int row, int col) {return data.get(row)[col];}
+        public Class<?> getColumnClass(int c) {return getValueAt(0, c).getClass();}
+
+        public boolean isCellEditable(int row, int col) {return col == 0 && getValueAt(row, col) != null;}
+        public void setValueAt(Object value, int row, int col) {
+            data.get(row)[col] = value;
+            fireTableCellUpdated(row, col);
+        }
+
+        public void hideEmpty() {
+            backupData = (ArrayList<Object[]>)data.clone();
+            data.removeIf(r -> r[2] != null && (int)r[2] == 0);
+            fireTableDataChanged();
+        }
+
+        public void showEmpty() {
+            data = backupData;
+            fireTableDataChanged();
+        }
+    }
 
     private class JSpinnerEditor extends AbstractCellEditor implements TableCellEditor {
         private JSpinner spinner = new JSpinner();
@@ -41,7 +75,24 @@ public class KitchenPro extends JPanel {
                 }
             }
         });
-        add(btn, BorderLayout.NORTH);
+
+        JCheckBox cb = new JCheckBox("Hide empty rows");
+        cb.addItemListener(new ItemListener(){
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    ((MyTableModel)table.getModel()).hideEmpty();
+                } else {
+                    ((MyTableModel)table.getModel()).showEmpty();
+                }
+            }
+        });
+
+        JPanel p = new JPanel();
+        p.setLayout(new BoxLayout(p, BoxLayout.X_AXIS));
+        p.add(btn);
+        p.add(Box.createHorizontalGlue());
+        p.add(cb);
+        add(p, BorderLayout.NORTH);
 
         table = loadQuantities("quantities.txt");
         JScrollPane scrollPane = new JScrollPane(table);
@@ -71,22 +122,7 @@ public class KitchenPro extends JPanel {
             System.err.println("Could not load " + filename);
         }
 
-        JTable table = new JTable(new AbstractTableModel() {
-            private String[] columnNames = {"Item", "Current Stock", "To Order", "Total"};
-            private Object[][] data = list.toArray(new Object[][]{});
-
-            public int getColumnCount() {return columnNames.length;}
-            public int getRowCount() {return data.length;}
-            public String getColumnName(int col) {return columnNames[col];}
-            public Object getValueAt(int row, int col) {return data[row][col];}
-            public Class getColumnClass(int c) {return getValueAt(0, c).getClass();}
-
-            public boolean isCellEditable(int row, int col) {return col == 0 && getValueAt(row, col) != null;}
-            public void setValueAt(Object value, int row, int col) {
-                data[row][col] = value;
-                fireTableCellUpdated(row, col);
-            }
-        });
+        JTable table = new JTable(new MyTableModel(list));
 
         table.setRowSelectionAllowed(false);
         table.setColumnSelectionAllowed(false);
